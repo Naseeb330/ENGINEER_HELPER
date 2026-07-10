@@ -8,17 +8,27 @@ st.set_page_config(page_title="Engineering Portal", layout="wide")
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     
-    # Is tarah model fetch karne se 404 error khatam ho jayega
-    # Kyunki hum list mein se pehla available 'gemini' model pick kar rahe hain
-    def get_model():
-        model_name = 'gemini-1.5-flash' # Ya 'gemini-pro'
-        return genai.GenerativeModel(model_name)
-    
-    model = get_model()
+    # DYNAMIC MODEL CHECKING
+    # Is block se hum wo model uthayenge jo aapke account par active hai
+    def get_valid_model():
+        models = genai.list_models()
+        for m in models:
+            if 'generateContent' in m.supported_generation_methods:
+                # Agar 'gemini-1.5-flash' mil jaye toh best hai
+                if 'gemini-1.5-flash' in m.name:
+                    return genai.GenerativeModel(m.name)
+                # Agar nahi, toh 'gemini-pro' (1.0) use karein
+                if 'gemini-pro' in m.name:
+                    return genai.GenerativeModel(m.name)
+        return None
+
+    model = get_valid_model()
 except Exception as e:
     st.error(f"Config Error: {e}")
 
 def ask_gemini(query):
+    if not model:
+        return "Model not found. Please check your API permissions."
     try:
         response = model.generate_content(query)
         return response.text
