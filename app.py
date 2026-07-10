@@ -2,27 +2,26 @@ import streamlit as st
 import google.generativeai as genai
 
 # Page Config
-st.set_page_config(page_title="Engineering Career Portal", layout="wide")
+st.set_page_config(page_title="Engineering Portal", layout="wide")
 
-# API Configuration
-# Hum try-except block ko saaf-saaf likh rahe hain taake SyntaxError na ho
+# API Setup
 try:
+    # Streamlit Secrets se API key lein
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # Sab se zyada stable model
+    model = genai.GenerativeModel('gemini-1.0-pro')
 except Exception as e:
-    st.error(f"Configuration Error: {e}")
+    st.error(f"Config Error: {e}")
 
 def ask_gemini(query):
     try:
-        # Yahan model ka istemal
         response = model.generate_content(query)
         return response.text
     except Exception as e:
         return f"Gemini Error: {str(e)}"
 
 # UI Logic
-if "page" not in st.session_state: 
-    st.session_state.page = "home"
+if "page" not in st.session_state: st.session_state.page = "home"
 
 if st.session_state.page == "home":
     st.title("🎓 Engineering Career Development Portal")
@@ -41,6 +40,5 @@ elif st.session_state.page == "dashboard":
     st.title(f"⚡ {st.session_state.selected_domain} Dashboard")
     
     if st.button("Get Qualification Info"):
-        with st.spinner("Fetching AI response..."):
-            result = ask_gemini(f"Explain qualification requirements for {st.session_state.selected_domain} in Pakistan.")
-            st.write(result)
+        with st.spinner("Fetching..."):
+            st.write(ask_gemini(f"Explain qualification requirements for {st.session_state.selected_domain}."))
