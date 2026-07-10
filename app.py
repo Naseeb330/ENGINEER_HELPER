@@ -8,7 +8,7 @@ st.set_page_config(page_title="Engineering Career Portal", layout="wide")
 # Make sure you have GEMINI_API_KEY in your Streamlit Cloud Secrets settings
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
 except Exception as e:
     st.error("API Key configure nahi ho saki. Check your Secrets.")
 
