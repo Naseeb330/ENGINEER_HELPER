@@ -1,32 +1,32 @@
 import streamlit as st
+import pandas as pd
 
-# 1. Page Configuration
-st.set_page_config(layout="wide")
+# Page config
+st.set_page_config(page_title="Coffee Shop", layout="wide")
 
-# 2. Sidebar: User Account & Navigation
+# Persistent Cart
+if "cart" not in st.session_state:
+    st.session_state.cart = []
+
+# Sidebar for User/Cart
 with st.sidebar:
-    st.header("User Account")
-    st.write("Welcome, User!")
-    st.button("View Profile")
-    st.divider()
-    st.header("Filters")
-    category = st.selectbox("Category", ["Coffee", "Equipment", "Merch"])
+    st.header("Your Cart")
+    if st.session_state.cart:
+        for item in st.session_state.cart:
+            st.write(f"- {item}")
+        if st.button("Clear Cart"):
+            st.session_state.cart = []
+    else:
+        st.write("Cart is empty.")
 
-# 3. Main Area: Product Display
-st.title("Available Products")
-col1, col2, col3 = st.columns(3)
+# Main Dashboard
+st.title("☕ Artisan Coffee Shop")
+# Mock data display
+menu = pd.DataFrame({"Item": ["Latte", "Espresso"], "Price": [4.50, 3.00]})
 
-with col1:
-    st.image("coffee1.jpg")
-    st.subheader("Product 1")
-    st.button("Add to Cart", key="p1")
-
-with col2:
-    st.image("coffee2.jpg")
-    st.subheader("Product 2")
-    st.button("Add to Cart", key="p2")
-
-with col3:
-    st.image("coffee3.jpg")
-    st.subheader("Product 3")
-    st.button("Add to Cart", key="p3")
+cols = st.columns(3)
+for i, row in menu.iterrows():
+    with cols[i]:
+        st.write(f"**{row['Item']}**")
+        if st.button(f"Add {row['Item']}", key=row['Item']):
+            st.session_state.cart.append(row['Item'])
