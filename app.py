@@ -1,53 +1,46 @@
 import streamlit as st
-import google.generativeai as genai
+import pandas as pd
 
-# Page config
-st.set_page_config(page_title="Coffee Shop Agent", page_icon="☕")
+# 1. Mock Data Setup (Replace this with your database or CSV file)
+data = {
+    "Item": ["Espresso", "Latte", "Cappuccino", "Muffin", "Croissant", "Bagel"],
+    "Type": ["Drink", "Drink", "Drink", "Food", "Food", "Food"],
+    "Location": ["Downtown", "Uptown", "Downtown", "Downtown", "Uptown", "Downtown"]
+}
+df = pd.DataFrame(data)
 
-# Setup Gemini API (Add your key in Streamlit secrets for security)
-# In your local environment, use: st.secrets["GEMINI_API_KEY"]
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-1.5-flash")
+st.set_page_config(page_title="Coffee Shop Menu", layout="wide")
+st.title("☕ Coffee Shop Availability Dashboard")
 
-st.title("☕ Artisan Coffee Bot")
-st.write("Welcome! I'm here to help you with orders, menu info, and delivery status.")
-
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant", "content": "How can I help you with your order today?"}
-    ]
-
-# Display chat messages from history
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# React to user input
-if prompt := st.chat_input("What would you like to order?"):
-    # Add user message to state
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    # Generate response
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-        
-        # System instructions to keep the bot focused
-        system_instruction = """
-        You are a helpful coffee shop assistant. 
-        1. Keep responses concise and friendly.
-        2. If the user asks for an order, confirm the items, size, and milk preference.
-        3. If you don't know the answer, politely ask them to speak to a human.
-        """
-        
-        chat = model.start_chat(history=[])
-        response = chat.send_message(system_instruction + prompt)
-        
-        full_response = response.text
-        message_placeholder.markdown(full_response)
+# 2. Sidebar Filters
+with st.sidebar:
+    st.header("Filter Options")
     
-    # Add assistant response to state
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+    # Get unique values for filters
+    locations = df["Location"].unique()
+    types = df["Type"].unique()
+    
+    selected_location = st.selectbox("Select Location", options=locations)
+    selected_type = st.multiselect("Select Order Type", options=types, default=types)
+
+# 3. Filtering Logic
+filtered_df = df[
+    (df["Location"] == selected_location) & 
+    (df["Type"].isin(selected_type))
+]
+
+# 4. Display Results
+st.subheader(f"Available Items in {selected_location}")
+
+if not filtered_df.empty:
+    # Use columns to display items in a grid-like view
+    cols = st.columns(3)
+    for i, row in enumerate(filtered_df.itertuples()):
+        with cols[i % 3]:
+            st.info(f"**{row.Item}**\n\nType: {row.Type}")
+else:
+    st.warning("No items match your selected criteria.")
+
+# Optional: Show raw data in an expander
+with st.expander("View all data"):
+    st.dataframe(df)
