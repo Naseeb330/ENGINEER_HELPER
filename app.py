@@ -12,16 +12,16 @@ if "menu" not in st.session_state:
         "Price": [3.50, 4.50, 4.75, 5.00, 3.50]
     })
 
-# Initialize Cart as a list of dictionaries
-if "cart" not in st.session_state:
+# 3. Robust Cart Initialization (Fixes the TypeError)
+# This clears the cart if it contains the old 'string' format instead of 'dictionary'
+if "cart" not in st.session_state or (len(st.session_state.cart) > 0 and not isinstance(st.session_state.cart[0], dict)):
     st.session_state.cart = []
 
-# 3. Sidebar: User Cart
+# 4. Sidebar: User Cart
 with st.sidebar:
     st.header("🛒 Your Order")
     if st.session_state.cart:
         for item in st.session_state.cart:
-            # Now item is a dictionary, so this key lookup works!
             st.write(f"- {item['Item']} (${item['Price']:.2f})")
         
         st.divider()
@@ -34,10 +34,9 @@ with st.sidebar:
     else:
         st.write("Your cart is empty.")
 
-# 4. Main Dashboard: Menu Display
+# 5. Main Dashboard: Menu Display
 st.title("☕ Artisan Coffee Shop")
 
-# Product Grid
 cols = st.columns(3)
 for idx, row in st.session_state.menu.iterrows():
     with cols[idx % 3]:
@@ -49,7 +48,7 @@ for idx, row in st.session_state.menu.iterrows():
                 st.session_state.cart.append({"Item": row['Item'], "Price": row['Price']})
                 st.toast(f"Added {row['Item']} to cart!")
 
-# 5. Order Processing
+# 6. Order Processing
 st.divider()
 st.header("Checkout")
 with st.form("order_form"):
@@ -59,6 +58,6 @@ with st.form("order_form"):
     if st.form_submit_button("Place Order"):
         if name and address and st.session_state.cart:
             st.success(f"Thank you, {name}! Your order will be delivered to {address}.")
-            st.session_state.cart = [] # Reset cart
+            st.session_state.cart = [] # Reset cart after submission
         else:
             st.error("Please fill in your details and add items to your cart.")
