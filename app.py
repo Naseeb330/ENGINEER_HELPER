@@ -1,46 +1,50 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Mock Data Setup (Replace this with your database or CSV file)
+# Expanded Menu Data
 data = {
-    "Item": ["Espresso", "Latte", "Cappuccino", "Muffin", "Croissant", "Bagel"],
-    "Type": ["Drink", "Drink", "Drink", "Food", "Food", "Food"],
-    "Location": ["Downtown", "Uptown", "Downtown", "Downtown", "Uptown", "Downtown"]
+    "Item": ["Espresso", "Latte", "Cappuccino", "Mocha", "Muffin", "Croissant", "Bagel", "Cookie"],
+    "Type": ["Drink", "Drink", "Drink", "Drink", "Food", "Food", "Food", "Food"],
+    "Location": ["Downtown", "Uptown", "Downtown", "Uptown", "Downtown", "Uptown", "Downtown", "Uptown"],
+    "Price": [3.50, 4.50, 4.75, 5.00, 3.00, 3.50, 4.00, 2.50]
 }
 df = pd.DataFrame(data)
 
-st.set_page_config(page_title="Coffee Shop Menu", layout="wide")
-st.title("☕ Coffee Shop Availability Dashboard")
+st.set_page_config(page_title="Coffee Shop Ordering", layout="wide")
+st.title("☕ Artisan Coffee Ordering")
 
-# 2. Sidebar Filters
+# Sidebar Filters
 with st.sidebar:
-    st.header("Filter Options")
-    
-    # Get unique values for filters
-    locations = df["Location"].unique()
-    types = df["Type"].unique()
-    
-    selected_location = st.selectbox("Select Location", options=locations)
-    selected_type = st.multiselect("Select Order Type", options=types, default=types)
+    st.header("Menu Filters")
+    selected_location = st.selectbox("Select Location", df["Location"].unique())
+    selected_types = st.multiselect("Select Item Types", df["Type"].unique(), default=df["Type"].unique())
 
-# 3. Filtering Logic
-filtered_df = df[
-    (df["Location"] == selected_location) & 
-    (df["Type"].isin(selected_type))
-]
+# Filtered View
+filtered_df = df[(df["Location"] == selected_location) & (df["Type"].isin(selected_types))]
 
-# 4. Display Results
+# Display Items with Quantity Selectors
 st.subheader(f"Available Items in {selected_location}")
+cart = {}
 
-if not filtered_df.empty:
-    # Use columns to display items in a grid-like view
-    cols = st.columns(3)
-    for i, row in enumerate(filtered_df.itertuples()):
-        with cols[i % 3]:
-            st.info(f"**{row.Item}**\n\nType: {row.Type}")
-else:
-    st.warning("No items match your selected criteria.")
+# Create grid for items
+cols = st.columns(3)
+for idx, row in enumerate(filtered_df.itertuples()):
+    with cols[idx % 3]:
+        st.write(f"**{row.Item}** - ${row.Price:.2f}")
+        # Add a quantity selector for each item
+        qty = st.number_input(f"Qty for {row.Item}", min_value=0, max_value=10, value=0, key=row.Item)
+        if qty > 0:
+            cart[row.Item] = {"qty": qty, "price": row.Price}
 
-# Optional: Show raw data in an expander
-with st.expander("View all data"):
-    st.dataframe(df)
+# Checkout Section
+if cart:
+    st.divider()
+    st.header("Checkout")
+    total = sum(item["qty"] * item["price"] for item in cart.values())
+    st.write(f"### Total Amount: ${total:.2f}")
+    
+    with st.form("checkout_form"):
+        name = st.text_input("Customer Name")
+        address = st.text_input("Delivery Address")
+        if st.form_submit_button("Place Order"):
+            st.success(f"Order confirmed for {name}! Total: ${total:.2f}")
