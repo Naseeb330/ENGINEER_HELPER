@@ -53,28 +53,27 @@ for idx, row in st.session_state.menu.iterrows():
 st.divider()
 st.header("Checkout")
 
-# Check if cart has items before showing checkout
 if st.session_state.cart:
-    # Calculate Total
     total_amount = sum(item['Price'] for item in st.session_state.cart)
     st.write(f"### Total Amount to Pay: ${total_amount:.2f}")
 
     with st.form("order_form"):
         name = st.text_input("Customer Name")
         address = st.text_input("Delivery Address")
+        # Added contact number field
+        phone = st.text_input("Contact Number") 
         
-        # Display note about payment
         st.info("Note: Payment will be collected in person upon delivery.")
         
         if st.form_submit_button("Place Order"):
-            if name and address:
-                # Success message as requested
-                st.success(f"Thank you, {name}! Your order will be delivered to: {address}.")
-                st.write("Please have your payment ready when the delivery arrives.")
+            # Added phone validation
+            if name and address and phone:
+                st.success(f"Thank you, {name}! Your order will be delivered to {address}.")
+                st.write(f"We will contact you at {phone} if needed.")
+                st.write("Please have your payment ready upon arrival.")
                 
-                # Reset cart
                 st.session_state.cart = []
             else:
-                st.error("Please provide both your name and delivery address.")
+                st.error("Please fill in all fields: Name, Address, and Contact Number.")
 else:
     st.write("Add items to your cart to proceed to checkout.")
